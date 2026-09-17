@@ -1,0 +1,5760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+user-scalable=no,
+viewport-fit=cover">
+
+<meta name="theme-color" content="#07070a">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-status-bar-style"
+content="black-translucent">
+
+<meta name="apple-mobile-web-app-title"
+content="RUN//BREAK">
+
+<title>RUN//BREAK</title>
+
+<style>
+
+/* =========================================================
+   RUN//BREAK
+   MOBILE RUNNER ENGINE
+   ========================================================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
+
+    width:100%;
+    height:100%;
+
+    overflow:hidden;
+
+    background:#030305;
+
+    color:#fff;
+
+    font-family:
+        Inter,
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    touch-action:none;
+}
+
+body{
+    overscroll-behavior:none;
+}
+
+button,
+input{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+canvas{
+
+    position:fixed;
+
+    inset:0;
+
+    width:100%;
+    height:100%;
+
+    display:block;
+
+    background:#050509;
+}
+
+/* =========================================================
+   GENERAL UI
+   ========================================================= */
+
+.screen{
+
+    position:fixed;
+
+    inset:0;
+
+    z-index:20;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:
+        env(safe-area-inset-top)
+        18px
+        env(safe-area-inset-bottom)
+        18px;
+
+    background:
+
+        radial-gradient(
+            circle at 50% 25%,
+            rgba(255,45,45,.15),
+            transparent 38%
+        ),
+
+        rgba(3,3,5,.93);
+
+    backdrop-filter:blur(8px);
+}
+
+.hidden{
+    display:none!important;
+}
+
+.panel{
+
+    width:
+        min(
+            440px,
+            100%
+        );
+
+    max-height:92vh;
+
+    overflow:auto;
+
+    padding:28px;
+
+    border:
+
+        1px solid
+        rgba(255,255,255,.12);
+
+    border-radius:26px;
+
+    background:
+
+        linear-gradient(
+            145deg,
+            rgba(25,25,32,.96),
+            rgba(7,7,10,.97)
+        );
+
+    box-shadow:
+
+        0 30px 100px
+        rgba(0,0,0,.75);
+}
+
+.logo{
+
+    text-align:center;
+
+    font-size:
+        clamp(35px,10vw,62px);
+
+    font-weight:1000;
+
+    letter-spacing:5px;
+
+    line-height:1;
+}
+
+.logo .red{
+    color:#ff3b30;
+}
+
+.tagline{
+
+    margin-top:10px;
+
+    text-align:center;
+
+    color:#777;
+
+    letter-spacing:4px;
+
+    font-size:10px;
+}
+
+.primary{
+
+    width:100%;
+
+    border:0;
+
+    padding:16px;
+
+    margin-top:18px;
+
+    border-radius:13px;
+
+    background:
+
+        linear-gradient(
+            135deg,
+            #ff4a3d,
+            #e51d2a
+        );
+
+    color:white;
+
+    font-size:14px;
+
+    font-weight:900;
+
+    letter-spacing:2px;
+
+    box-shadow:
+        0 8px 35px
+        rgba(255,50,45,.2);
+}
+
+.secondary{
+
+    width:100%;
+
+    border:
+
+        1px solid
+        rgba(255,255,255,.12);
+
+    padding:15px;
+
+    margin-top:10px;
+
+    border-radius:13px;
+
+    background:#111116;
+
+    color:#ddd;
+
+    font-weight:700;
+}
+
+input{
+
+    width:100%;
+
+    padding:15px;
+
+    margin-top:12px;
+
+    border-radius:12px;
+
+    border:
+
+        1px solid
+        rgba(255,255,255,.12);
+
+    background:#09090d;
+
+    color:white;
+
+    outline:none;
+}
+
+input:focus{
+    border-color:#ff3b30;
+}
+
+.muted{
+    color:#777;
+}
+
+.tiny{
+    font-size:10px;
+}
+
+.center{
+    text-align:center;
+}
+
+/* =========================================================
+   START SCREEN
+   ========================================================= */
+
+.start-copy{
+
+    text-align:center;
+
+    margin-top:45px;
+}
+
+.start-copy h2{
+
+    font-size:28px;
+
+    margin-bottom:10px;
+}
+
+.start-copy p{
+
+    color:#999;
+
+    font-size:13px;
+
+    line-height:1.6;
+}
+
+.start-stats{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:8px;
+
+    margin-top:24px;
+}
+
+.stat{
+
+    padding:14px 5px;
+
+    background:#0b0b10;
+
+    border:
+        1px solid
+        rgba(255,255,255,.07);
+
+    border-radius:12px;
+
+    text-align:center;
+}
+
+.stat strong{
+
+    display:block;
+
+    font-size:21px;
+}
+
+.stat span{
+
+    display:block;
+
+    color:#666;
+
+    font-size:8px;
+
+    letter-spacing:1px;
+
+    margin-top:4px;
+}
+
+/* =========================================================
+   HUD
+   ========================================================= */
+
+#hud{
+
+    position:fixed;
+
+    top:
+        calc(
+            12px +
+            env(safe-area-inset-top)
+        );
+
+    left:12px;
+    right:12px;
+
+    z-index:10;
+
+    display:none;
+
+    justify-content:space-between;
+
+    pointer-events:none;
+}
+
+.hud-group{
+
+    display:flex;
+
+    gap:6px;
+}
+
+.hud-box{
+
+    min-width:66px;
+
+    padding:8px 10px;
+
+    border-radius:10px;
+
+    background:
+        rgba(0,0,0,.46);
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    backdrop-filter:blur(8px);
+}
+
+.hud-label{
+
+    color:#777;
+
+    font-size:7px;
+
+    letter-spacing:1px;
+}
+
+.hud-value{
+
+    font-size:16px;
+
+    font-weight:900;
+
+    margin-top:2px;
+}
+
+#pauseButton{
+
+    position:fixed;
+
+    top:
+        calc(
+            72px +
+            env(safe-area-inset-top)
+        );
+
+    right:14px;
+
+    z-index:11;
+
+    width:42px;
+
+    height:42px;
+
+    display:none;
+
+    border-radius:50%;
+
+    border:
+        1px solid
+        rgba(255,255,255,.15);
+
+    background:
+        rgba(0,0,0,.45);
+
+    color:white;
+}
+
+/* =========================================================
+   TOUCH CONTROLS
+   ========================================================= */
+
+#controls{
+
+    position:fixed;
+
+    bottom:
+        calc(
+            15px +
+            env(safe-area-inset-bottom)
+        );
+
+    left:0;
+    right:0;
+
+    z-index:12;
+
+    display:none;
+
+    justify-content:space-between;
+
+    padding:0 18px;
+
+    pointer-events:none;
+}
+
+.control-side{
+
+    display:flex;
+
+    gap:10px;
+
+    pointer-events:auto;
+}
+
+.control{
+
+    width:68px;
+
+    height:68px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border:
+        1px solid
+        rgba(255,255,255,.14);
+
+    background:
+        rgba(10,10,14,.65);
+
+    color:white;
+
+    font-size:25px;
+
+    user-select:none;
+
+    backdrop-filter:blur(8px);
+}
+
+.control.red{
+
+    background:
+        rgba(255,45,45,.2);
+}
+
+/* =========================================================
+   LEVEL SELECT
+   ========================================================= */
+
+.level-header{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    margin-bottom:20px;
+}
+
+.level-header h2{
+
+    font-size:25px;
+}
+
+.level-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(5,1fr);
+
+    gap:7px;
+}
+
+.level-button{
+
+    aspect-ratio:1;
+
+    border-radius:10px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    background:#111116;
+
+    color:white;
+
+    font-weight:900;
+
+    font-size:12px;
+}
+
+.level-button.unlocked{
+
+    border-color:
+        rgba(255,59,48,.5);
+
+}
+
+.level-button.current{
+
+    background:#ff3b30;
+
+}
+
+.level-button.locked{
+
+    color:#444;
+
+}
+
+.level-button.completed{
+
+    background:
+        linear-gradient(
+            145deg,
+            #202025,
+            #0d0d10
+        );
+
+    color:#ffd166;
+}
+
+/* =========================================================
+   HOME
+   ========================================================= */
+
+.home{
+
+    width:
+        min(
+            900px,
+            100%
+        );
+
+    height:90vh;
+
+    overflow:auto;
+
+    padding:5px;
+}
+
+.home-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+}
+
+.mini-logo{
+
+    font-weight:1000;
+
+    letter-spacing:3px;
+}
+
+.mini-logo span{
+    color:#ff3b30;
+}
+
+.player-pill{
+
+    padding:8px 12px;
+
+    border-radius:30px;
+
+    background:#111116;
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    color:#aaa;
+
+    font-size:11px;
+}
+
+.hero{
+
+    padding:24px;
+
+    border-radius:20px;
+
+    background:
+
+        linear-gradient(
+            135deg,
+            rgba(255,59,48,.16),
+            rgba(255,255,255,.025)
+        );
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    margin-bottom:15px;
+}
+
+.hero small{
+
+    color:#ff625a;
+
+    letter-spacing:2px;
+}
+
+.hero h1{
+
+    font-size:
+        clamp(30px,8vw,50px);
+
+    margin-top:8px;
+}
+
+.hero p{
+
+    color:#999;
+
+    line-height:1.5;
+
+    margin-top:7px;
+}
+
+.menu-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:10px;
+}
+
+.menu-card{
+
+    padding:20px;
+
+    border-radius:17px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.09);
+
+    background:#0d0d12;
+
+    text-align:left;
+
+    color:white;
+}
+
+.menu-card .icon{
+
+    font-size:28px;
+
+    margin-bottom:10px;
+}
+
+.menu-card strong{
+
+    display:block;
+
+    font-size:15px;
+}
+
+.menu-card span{
+
+    display:block;
+
+    color:#777;
+
+    font-size:10px;
+
+    margin-top:5px;
+}
+
+/* =========================================================
+   MISSION
+   ========================================================= */
+
+.mission{
+
+    margin-top:15px;
+
+    padding:17px;
+
+    background:#0c0c11;
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    border-radius:15px;
+}
+
+.progress{
+
+    height:6px;
+
+    margin-top:10px;
+
+    background:#222;
+
+    border-radius:10px;
+
+    overflow:hidden;
+}
+
+.progress > div{
+
+    height:100%;
+
+    background:#ff3b30;
+
+    width:0%;
+}
+
+/* =========================================================
+   MUSIC
+   ========================================================= */
+
+.track{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:10px;
+
+    padding:14px;
+
+    margin-top:8px;
+
+    background:#0d0d12;
+
+    border-radius:12px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.07);
+}
+
+.track button{
+
+    width:45px;
+
+    height:45px;
+
+    border-radius:50%;
+
+    margin:0;
+
+    padding:0;
+
+    background:#ff3b30;
+
+    color:white;
+
+    border:0;
+}
+
+.track-name{
+
+    flex:1;
+}
+
+.track-name strong{
+
+    display:block;
+
+    font-size:13px;
+}
+
+.track-name span{
+
+    display:block;
+
+    margin-top:4px;
+
+    color:#666;
+
+    font-size:9px;
+}
+
+/* =========================================================
+   GAME OVER
+   ========================================================= */
+
+.gameover-title{
+
+    font-size:42px;
+
+    font-weight:1000;
+
+    text-align:center;
+}
+
+.gameover-title span{
+    color:#ff3b30;
+}
+
+.result-grid{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(2,1fr);
+
+    gap:8px;
+
+    margin-top:22px;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media(max-width:420px){
+
+    .panel{
+        padding:21px;
+    }
+
+    .logo{
+        font-size:36px;
+    }
+
+    .level-grid{
+        gap:5px;
+    }
+
+    .level-button{
+        font-size:10px;
+    }
+
+    .control{
+        width:62px;
+        height:62px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+
+<!-- ======================================================
+     START
+     ====================================================== -->
+
+<div
+    id="startScreen"
+    class="screen">
+
+    <div class="panel">
+
+        <div class="logo">
+            RUN<span class="red">//</span>BREAK
+        </div>
+
+        <div class="tagline">
+            RUN • JUMP • SLIDE • BREAK FREE
+        </div>
+
+        <div class="start-copy">
+
+            <h2>
+                How far can you run?
+            </h2>
+
+            <p>
+                Master 100 increasingly difficult
+                levels. Escape the city. Beat your
+                records. Become the fastest runner.
+            </p>
+
+        </div>
+
+        <input
+            id="nameInput"
+            maxlength="18"
+            placeholder="Runner name">
+
+        <input
+            id="emailInput"
+            type="email"
+            placeholder="Email address">
+
+        <button
+            class="primary"
+            onclick="createProfile()">
+
+            ENTER THE RUN
+
+        </button>
+
+        <div class="start-stats">
+
+            <div class="stat">
+                <strong id="startLevel">
+                    1
+                </strong>
+                <span>
+                    LEVEL
+                </span>
+            </div>
+
+            <div class="stat">
+                <strong id="startCoins">
+                    0
+                </strong>
+                <span>
+                    COINS
+                </span>
+            </div>
+
+            <div class="stat">
+                <strong id="startBest">
+                    0
+                </strong>
+                <span>
+                    BEST
+                </span>
+            </div>
+
+        </div>
+
+        <p class="muted tiny center"
+           style="margin-top:18px">
+
+            The first version saves your profile
+            locally. Online accounts/leaderboards
+            require a backend.
+
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     HOME
+     ====================================================== -->
+
+<div
+    id="homeScreen"
+    class="screen hidden">
+
+    <div class="home">
+
+        <div class="home-top">
+
+            <div class="mini-logo">
+                RUN<span>//</span>BREAK
+            </div>
+
+            <div
+                class="player-pill"
+                id="playerPill">
+                RUNNER
+            </div>
+
+        </div>
+
+        <div class="hero">
+
+            <small>
+                NEXT CHALLENGE
+            </small>
+
+            <h1>
+                LEVEL <span
+                id="homeLevel">
+                01
+                </span>
+            </h1>
+
+            <p id="homeLevelText">
+                The first run.
+                Learn the movement.
+            </p>
+
+            <button
+                class="primary"
+                onclick="launchSelectedLevel()">
+
+                START LEVEL
+
+            </button>
+
+        </div>
+
+        <div class="menu-grid">
+
+            <button
+                class="menu-card"
+                onclick="showLevels()">
+
+                <div class="icon">🗺️</div>
+
+                <strong>
+                    LEVELS
+                </strong>
+
+                <span>
+                    100 challenges
+                </span>
+
+            </button>
+
+            <button
+                class="menu-card"
+                onclick="showMissions()">
+
+                <div class="icon">🔥</div>
+
+                <strong>
+                    MISSIONS
+                </strong>
+
+                <span>
+                    Earn XP
+                </span>
+
+            </button>
+
+            <button
+                class="menu-card"
+                onclick="showMusic()">
+
+                <div class="icon">🎵</div>
+
+                <strong>
+                    MUSIC
+                </strong>
+
+                <span>
+                    Run with your sound
+                </span>
+
+            </button>
+
+            <button
+                class="menu-card"
+                onclick="showProfile()">
+
+                <div class="icon">👤</div>
+
+                <strong>
+                    PROFILE
+                </strong>
+
+                <span>
+                    Stats & progress
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     LEVEL SELECT
+     ====================================================== -->
+
+<div
+    id="levelsScreen"
+    class="screen hidden">
+
+    <div class="panel">
+
+        <div class="level-header">
+
+            <h2>
+                LEVELS
+            </h2>
+
+            <button
+                class="secondary"
+                style="width:auto;margin:0"
+                onclick="showHome()">
+
+                ← BACK
+
+            </button>
+
+        </div>
+
+        <p class="muted tiny"
+           style="margin-bottom:15px">
+
+            Complete levels to unlock the next
+            challenge.
+
+        </p>
+
+        <div
+            id="levelGrid"
+            class="level-grid">
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     MISSIONS
+     ====================================================== -->
+
+<div
+    id="missionsScreen"
+    class="screen hidden">
+
+    <div class="panel">
+
+        <div class="level-header">
+
+            <h2>
+                MISSIONS
+            </h2>
+
+            <button
+                class="secondary"
+                style="width:auto;margin:0"
+                onclick="showHome()">
+
+                ← BACK
+
+            </button>
+
+        </div>
+
+        <div class="mission">
+
+            <strong>
+                🏃 RUN 1,000 METERS
+            </strong>
+
+            <p class="muted tiny"
+               style="margin-top:6px">
+
+                Distance traveled
+
+            </p>
+
+            <div class="progress">
+                <div id="missionDistance"></div>
+            </div>
+
+        </div>
+
+        <div class="mission">
+
+            <strong>
+                🪙 COLLECT 100 COINS
+            </strong>
+
+            <p class="muted tiny"
+               style="margin-top:6px">
+
+                Coins collected
+
+            </p>
+
+            <div class="progress">
+                <div id="missionCoins"></div>
+            </div>
+
+        </div>
+
+        <div class="mission">
+
+            <strong>
+                🏆 COMPLETE 10 LEVELS
+            </strong>
+
+            <p class="muted tiny"
+               style="margin-top:6px">
+
+                Levels completed
+
+            </p>
+
+            <div class="progress">
+                <div id="missionLevels"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     MUSIC
+     ====================================================== -->
+
+<div
+    id="musicScreen"
+    class="screen hidden">
+
+    <div class="panel">
+
+        <div class="level-header">
+
+            <h2>
+                RUN//RADIO
+            </h2>
+
+            <button
+                class="secondary"
+                style="width:auto;margin:0"
+                onclick="showHome()">
+
+                ← BACK
+
+            </button>
+
+        </div>
+
+        <p class="muted tiny">
+
+            Original procedural tracks generated
+            by the game. No copyrighted music
+            is bundled.
+
+        </p>
+
+        <div class="track">
+
+            <div class="track-name">
+                <strong>
+                    NIGHT RUN
+                </strong>
+                <span>
+                    DARK • 128 BPM
+                </span>
+            </div>
+
+            <button
+                onclick="playTrack(0)">
+                ▶
+            </button>
+
+        </div>
+
+        <div class="track">
+
+            <div class="track-name">
+                <strong>
+                    NEON ESCAPE
+                </strong>
+                <span>
+                    FAST • 145 BPM
+                </span>
+            </div>
+
+            <button
+                onclick="playTrack(1)">
+                ▶
+            </button>
+
+        </div>
+
+        <div class="track">
+
+            <div class="track-name">
+                <strong>
+                    LAST CITY
+                </strong>
+                <span>
+                    EPIC • 155 BPM
+                </span>
+            </div>
+
+            <button
+                onclick="playTrack(2)">
+                ▶
+            </button>
+
+        </div>
+
+        <button
+            class="secondary"
+            onclick="stopMusic()">
+
+            STOP MUSIC
+
+        </button>
+
+        <button
+            class="secondary"
+            onclick="downloadGeneratedTrack()">
+
+            ⬇ DOWNLOAD RUN TRACK
+
+        </button>
+
+        <p
+            id="musicStatus"
+            class="muted tiny center"
+            style="margin-top:12px">
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     PROFILE
+     ====================================================== -->
+
+<div
+    id="profileScreen"
+    class="screen hidden">
+
+    <div class="panel">
+
+        <div class="level-header">
+
+            <h2>
+                PROFILE
+            </h2>
+
+            <button
+                class="secondary"
+                style="width:auto;margin:0"
+                onclick="showHome()">
+
+                ← BACK
+
+            </button>
+
+        </div>
+
+        <div class="center">
+
+            <div
+                style="
+                width:75px;
+                height:75px;
+                border-radius:50%;
+                background:#ff3b30;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                margin:10px auto;
+                font-size:28px;
+                font-weight:900">
+
+                🏃
+
+            </div>
+
+            <h2 id="profileName">
+                RUNNER
+            </h2>
+
+            <p
+                id="profileEmail"
+                class="muted tiny">
+            </p>
+
+        </div>
+
+        <div class="start-stats">
+
+            <div class="stat">
+                <strong id="profileLevel">
+                    1
+                </strong>
+                <span>
+                    LEVEL
+                </span>
+            </div>
+
+            <div class="stat">
+                <strong id="profileCoins">
+                    0
+                </strong>
+                <span>
+                    COINS
+                </span>
+            </div>
+
+            <div class="stat">
+                <strong id="profileXP">
+                    0
+                </strong>
+                <span>
+                    XP
+                </span>
+            </div>
+
+        </div>
+
+        <button
+            class="secondary"
+            onclick="resetProgress()">
+
+            RESET LOCAL PROGRESS
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     GAME HUD
+     ====================================================== -->
+
+<div id="hud">
+
+    <div class="hud-group">
+
+        <div class="hud-box">
+
+            <div class="hud-label">
+                LEVEL
+            </div>
+
+            <div
+                id="hudLevel"
+                class="hud-value">
+                01
+            </div>
+
+        </div>
+
+        <div class="hud-box">
+
+            <div class="hud-label">
+                SCORE
+            </div>
+
+            <div
+                id="hudScore"
+                class="hud-value">
+                0
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="hud-group">
+
+        <div class="hud-box">
+
+            <div class="hud-label">
+                🪙
+            </div>
+
+            <div
+                id="hudCoins"
+                class="hud-value">
+                0
+            </div>
+
+        </div>
+
+        <div class="hud-box">
+
+            <div class="hud-label">
+                ❤️
+            </div>
+
+            <div
+                id="hudLives"
+                class="hud-value">
+                3
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<button
+    id="pauseButton"
+    onclick="togglePause()">
+    II
+</button>
+
+
+<!-- ======================================================
+     TOUCH CONTROLS
+     ====================================================== -->
+
+<div id="controls">
+
+    <div class="control-side">
+
+        <div
+            id="slideControl"
+            class="control">
+            ↓
+        </div>
+
+        <div
+            id="dashControl"
+            class="control">
+            ⚡
+        </div>
+
+    </div>
+
+    <div class="control-side">
+
+        <div
+            id="jumpControl"
+            class="control red">
+            ↑
+        </div>
+
+        <div
+            id="doubleControl"
+            class="control">
+            ↑↑
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     GAME OVER
+     ====================================================== -->
+
+<div
+    id="gameOverScreen"
+    class="screen hidden">
+
+    <div class="panel">
+
+        <div class="gameover-title">
+            RUN<span>OVER</span>
+        </div>
+
+        <p
+            id="gameOverMessage"
+            class="muted center"
+            style="margin-top:10px">
+        </p>
+
+        <div class="result-grid">
+
+            <div class="stat">
+
+                <strong id="finalScore">
+                    0
+                </strong>
+
+                <span>
+                    SCORE
+                </span>
+
+            </div>
+
+            <div class="stat">
+
+                <strong id="finalCoins">
+                    0
+                </strong>
+
+                <span>
+                    COINS
+                </span>
+
+            </div>
+
+            <div class="stat">
+
+                <strong id="finalDistance">
+                    0
+                </strong>
+
+                <span>
+                    METERS
+                </span>
+
+            </div>
+
+            <div class="stat">
+
+                <strong id="finalXP">
+                    0
+                </strong>
+
+                <span>
+                    XP
+                </span>
+
+            </div>
+
+        </div>
+
+        <button
+            class="primary"
+            onclick="retryLevel()">
+
+            RUN AGAIN
+
+        </button>
+
+        <button
+            class="secondary"
+            onclick="showHome()">
+
+            MENU
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   RUN//BREAK ENGINE
+   ========================================================= */
+
+"use strict";
+
+
+/* =========================================================
+   CANVAS
+   ========================================================= */
+
+const canvas =
+    document.getElementById(
+        "gameCanvas"
+    );
+
+const ctx =
+    canvas.getContext(
+        "2d"
+    );
+
+
+let CW = innerWidth;
+let CH = innerHeight;
+let DPR = Math.min(
+    window.devicePixelRatio || 1,
+    2
+);
+
+
+function resizeCanvas(){
+
+    DPR = Math.min(
+        window.devicePixelRatio || 1,
+        2
+    );
+
+    CW = innerWidth;
+    CH = innerHeight;
+
+    canvas.width =
+        CW * DPR;
+
+    canvas.height =
+        CH * DPR;
+
+    canvas.style.width =
+        CW + "px";
+
+    canvas.style.height =
+        CH + "px";
+
+    ctx.setTransform(
+        DPR,
+        0,
+        0,
+        DPR,
+        0,
+        0
+    );
+}
+
+
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
+
+resizeCanvas();
+
+
+/* =========================================================
+   GAME DATA
+   ========================================================= */
+
+const TOTAL_LEVELS = 100;
+
+let selectedLevel = 1;
+
+let running = false;
+
+let paused = false;
+
+let levelComplete = false;
+
+let gameTime = 0;
+
+let score = 0;
+
+let coins = 0;
+
+let xpEarned = 0;
+
+let distance = 0;
+
+let lives = 3;
+
+let speed = 6;
+
+let levelSpeed = 6;
+
+let cameraX = 0;
+
+let levelProgress = 0;
+
+let lastTime = performance.now();
+
+let spawnTimer = 0;
+
+let shake = 0;
+
+let currentPatternIndex = 0;
+
+let obstacles = [];
+
+let pickups = [];
+
+let particles = [];
+
+let floatingTexts = [];
+
+let stars = [];
+
+
+/* =========================================================
+   LOCAL PLAYER DATA
+   ========================================================= */
+
+const defaultSave = {
+
+    name:"",
+    email:"",
+
+    unlocked:1,
+
+    completed:[],
+
+    coins:0,
+
+    xp:0,
+
+    totalDistance:0,
+
+    bestScore:0,
+
+    skins:["default"],
+
+    selectedSkin:"default",
+
+    missions:{
+
+        distance:0,
+
+        coins:0,
+
+        levels:0
+
+    }
+
+};
+
+
+let save =
+    JSON.parse(
+        localStorage.getItem(
+            "runbreak_save"
+        ) || "null"
+    ) ||
+    structuredClone(defaultSave);
+
+
+function saveGame(){
+
+    localStorage.setItem(
+        "runbreak_save",
+        JSON.stringify(save)
+    );
+
+}
+
+
+/* =========================================================
+   LEVEL DATABASE
+   =========================================================
+
+   100 levels are generated from difficulty,
+   environment and pattern combinations.
+   ========================================================= */
+
+const environments = [
+
+    {
+        name:"NIGHT CITY",
+        sky1:"#080812",
+        sky2:"#171729",
+        ground:"#060609",
+        accent:"#ff3b30"
+    },
+
+    {
+        name:"NEON DISTRICT",
+        sky1:"#090615",
+        sky2:"#231139",
+        ground:"#050407",
+        accent:"#b45cff"
+    },
+
+    {
+        name:"HIGHWAY",
+        sky1:"#071017",
+        sky2:"#17313b",
+        ground:"#05090b",
+        accent:"#3be8ff"
+    },
+
+    {
+        name:"INDUSTRIAL",
+        sky1:"#120b07",
+        sky2:"#332015",
+        ground:"#080605",
+        accent:"#ff9f43"
+    },
+
+    {
+        name:"ROOFTOPS",
+        sky1:"#070d13",
+        sky2:"#17283a",
+        ground:"#05070a",
+        accent:"#5fd3ff"
+    },
+
+    {
+        name:"RED ZONE",
+        sky1:"#140707",
+        sky2:"#3a0c0c",
+        ground:"#080303",
+        accent:"#ff3b30"
+    },
+
+    {
+        name:"NIGHTFALL",
+        sky1:"#020207",
+        sky2:"#09091b",
+        ground:"#020204",
+        accent:"#8b7cff"
+    },
+
+    {
+        name:"FINAL CITY",
+        sky1:"#030303",
+        sky2:"#161616",
+        ground:"#020202",
+        accent:"#ffffff"
+    }
+
+];
+
+
+function getLevelData(level){
+
+    const difficulty =
+        Math.min(
+            10,
+            1 +
+            Math.floor(
+                (level-1)/10
+            )
+        );
+
+    const environment =
+        environments[
+            Math.floor(
+                (level-1)/13
+            ) %
+            environments.length
+        ];
+
+    return {
+
+        number:level,
+
+        difficulty,
+
+        environment,
+
+        target:
+            650 +
+            level*75,
+
+        speed:
+            5.4 +
+            level*.065,
+
+        coins:
+            5 +
+            Math.floor(level/5)
+
+    };
+
+}
+
+
+/* =========================================================
+   OBSTACLE TYPES
+   ========================================================= */
+
+const PATTERNS = [
+
+    ["coin"],
+
+    ["block"],
+
+    ["coin","block"],
+
+    ["block","coin"],
+
+    ["spike"],
+
+    ["coin","spike"],
+
+    ["high"],
+
+    ["coin","high"],
+
+    ["block","block"],
+
+    ["spike","block"],
+
+    ["low","coin","block"],
+
+    ["high","coin","spike"],
+
+    ["gap"],
+
+    ["coin","gap"],
+
+    ["block","coin","spike"],
+
+    ["high","low"],
+
+    ["coin","coin","block"],
+
+    ["spike","coin","high"],
+
+    ["block","gap"],
+
+    ["coin","spike","coin"],
+
+    ["wall"],
+
+    ["coin","wall"],
+
+    ["low","low"],
+
+    ["high","high"],
+
+    ["spike","spike"],
+
+    ["block","spike","coin"],
+
+    ["gap","coin","high"],
+
+    ["wall","coin","spike"],
+
+    ["low","high","coin"],
+
+    ["block","gap","spike"]
+
+];
+
+
+function patternForLevel(level){
+
+    const difficulty =
+        getLevelData(level)
+            .difficulty;
+
+    const available =
+        Math.min(
+            PATTERNS.length,
+            6 +
+            difficulty*3
+        );
+
+    return PATTERNS[
+        (level*7 +
+        currentPatternIndex++)
+        % available
+    ];
+
+}
+
+
+/* =========================================================
+   PLAYER
+   ========================================================= */
+
+const player = {
+
+    x:120,
+
+    y:0,
+
+    w:34,
+
+    h:65,
+
+    vy:0,
+
+    grounded:false,
+
+    sliding:false,
+
+    slideTimer:0,
+
+    jumps:0,
+
+    maxJumps:2,
+
+    dashTimer:0,
+
+    shield:0,
+
+    invincible:0,
+
+    runCycle:0,
+
+    reset(){
+
+        this.x =
+            Math.max(
+                75,
+                CW*.16
+            );
+
+        this.w=34;
+
+        this.h=65;
+
+        this.y=
+            groundY()-
+            this.h;
+
+        this.vy=0;
+
+        this.grounded=true;
+
+        this.sliding=false;
+
+        this.slideTimer=0;
+
+        this.jumps=0;
+
+        this.dashTimer=0;
+
+        this.shield=0;
+
+        this.invincible=0;
+
+        this.runCycle=0;
+
+    },
+
+    jump(){
+
+        if(
+            !running ||
+            paused
+        ) return;
+
+        if(
+            this.grounded
+        ){
+
+            this.vy =
+                -15.5;
+
+            this.grounded=false;
+
+            this.jumps=1;
+
+            spawnJumpParticles();
+
+            soundJump();
+
+        }
+
+        else if(
+            this.jumps <
+            this.maxJumps
+        ){
+
+            this.vy =
+                -14;
+
+            this.jumps++;
+
+            spawnJumpParticles();
+
+            soundJump();
+
+        }
+
+    },
+
+    slide(){
+
+        if(
+            !running ||
+            paused
+        ) return;
+
+        this.sliding=true;
+
+        this.slideTimer=34;
+
+        soundSlide();
+
+    },
+
+    dash(){
+
+        if(
+            !running ||
+            paused
+        ) return;
+
+        if(
+            this.dashTimer<=0
+        ){
+
+            this.dashTimer=70;
+
+            this.invincible=40;
+
+            shake=7;
+
+            soundDash();
+
+            for(
+                let i=0;
+                i<18;
+                i++
+            ){
+
+                particles.push({
+
+                    x:this.x,
+
+                    y:this.y+
+                        this.h/2,
+
+                    vx:
+                        -Math.random()*6,
+
+                    vy:
+                        (Math.random()-.5)*5,
+
+                    life:30,
+
+                    max:30,
+
+                    size:
+                        2+
+                        Math.random()*4
+
+                });
+
+            }
+
+        }
+
+    },
+
+    update(dt){
+
+        this.runCycle +=
+            dt*speed*.06;
+
+        this.vy +=
+            .85*dt;
+
+        this.y +=
+            this.vy*dt;
+
+        const floor =
+            groundY()-
+            this.h;
+
+        if(
+            this.y>=floor
+        ){
+
+            this.y=floor;
+
+            this.vy=0;
+
+            if(!this.grounded){
+
+                soundLand();
+
+            }
+
+            this.grounded=true;
+
+            this.jumps=0;
+
+        }
+
+        if(
+            this.slideTimer>0
+        ){
+
+            this.slideTimer-=dt;
+
+        }else{
+
+            this.sliding=false;
+
+        }
+
+        if(
+            this.dashTimer>0
+        ){
+
+            this.dashTimer-=dt;
+
+        }
+
+        if(
+            this.invincible>0
+        ){
+
+            this.invincible-=dt;
+
+        }
+
+        if(
+            this.grounded &&
+            Math.random()<.08
+        ){
+
+            particles.push({
+
+                x:this.x,
+
+                y:
+                    groundY()-3,
+
+                vx:
+                    -1-Math.random()*2,
+
+                vy:
+                    -Math.random()*1.5,
+
+                life:18,
+
+                max:18,
+
+                size:
+                    1+
+                    Math.random()*2
+
+            });
+
+        }
+
+    },
+
+    box(){
+
+        if(this.sliding){
+
+            return {
+
+                x:this.x-6,
+
+                y:this.y+27,
+
+                w:48,
+
+                h:37
+
+            };
+
+        }
+
+        return {
+
+            x:this.x,
+
+            y:this.y,
+
+            w:this.w,
+
+            h:this.h
+
+        };
+
+    },
+
+    draw(){
+
+        if(
+            this.invincible>0 &&
+            Math.floor(
+                this.invincible
+            )%6<3
+        ){
+
+            return;
+
+        }
+
+        const x=this.x;
+        const y=this.y;
+
+        ctx.save();
+
+        if(
+            this.dashTimer>0
+        ){
+
+            ctx.shadowBlur=20;
+
+            ctx.shadowColor="#ff3b30";
+
+        }
+
+        const skin =
+            save.selectedSkin;
+
+        let body="#ffffff";
+
+        if(
+            skin==="red"
+        ) body="#ff3b30";
+
+        if(
+            skin==="gold"
+        ) body="#ffd166";
+
+        if(
+            skin==="neon"
+        ) body="#51e6ff";
+
+        ctx.fillStyle=body;
+
+        /* head */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x+17,
+            y+9,
+            8,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.strokeStyle=body;
+
+        ctx.lineWidth=5;
+
+        ctx.lineCap="round";
+
+        if(this.sliding){
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+15,
+                y+30
+            );
+
+            ctx.lineTo(
+                x+39,
+                y+43
+            );
+
+            ctx.stroke();
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+15,
+                y+31
+            );
+
+            ctx.lineTo(
+                x-7,
+                y+40
+            );
+
+            ctx.stroke();
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+16,
+                y+42
+            );
+
+            ctx.lineTo(
+                x+43,
+                y+57
+            );
+
+            ctx.stroke();
+
+        }else{
+
+            /* torso */
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+17,
+                y+18
+            );
+
+            ctx.lineTo(
+                x+17,
+                y+43
+            );
+
+            ctx.stroke();
+
+            const swing =
+                Math.sin(
+                    this.runCycle
+                )*10;
+
+            /* arms */
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+17,
+                y+25
+            );
+
+            ctx.lineTo(
+                x-1,
+                y+34+swing
+            );
+
+            ctx.stroke();
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+17,
+                y+25
+            );
+
+            ctx.lineTo(
+                x+34,
+                y+33-swing
+            );
+
+            ctx.stroke();
+
+            /* legs */
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+17,
+                y+43
+            );
+
+            ctx.lineTo(
+                x+5+swing*.45,
+                y+64
+            );
+
+            ctx.stroke();
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+17,
+                y+43
+            );
+
+            ctx.lineTo(
+                x+30-swing*.45,
+                y+63
+            );
+
+            ctx.stroke();
+
+        }
+
+        ctx.restore();
+
+    }
+
+};
+
+
+/* =========================================================
+   WORLD HELPERS
+   ========================================================= */
+
+function groundY(){
+
+    return CH*.78;
+
+}
+
+
+function spawnObstacle(type,xOffset=0){
+
+    const x =
+        CW +
+        80 +
+        xOffset;
+
+    let o={
+
+        type,
+
+        x,
+
+        y:0,
+
+        w:40,
+
+        h:40,
+
+        passed:false,
+
+        vx:0
+
+    };
+
+    if(type==="block"){
+
+        o.w=45;
+        o.h=48;
+
+    }
+
+    if(type==="spike"){
+
+        o.w=46;
+        o.h=45;
+
+    }
+
+    if(type==="low"){
+
+        o.w=72;
+        o.h=25;
+
+    }
+
+    if(type==="high"){
+
+        o.w=82;
+        o.h=26;
+
+    }
+
+    if(type==="wall"){
+
+        o.w=32;
+        o.h=110;
+
+    }
+
+    if(type==="gap"){
+
+        o.w=
+            100+
+            Math.random()*55;
+
+        o.h=20;
+
+    }
+
+    obstacles.push(o);
+
+}
+
+
+function spawnPickup(type,xOffset=0){
+
+    pickups.push({
+
+        type,
+
+        x:
+            CW+
+            100+
+            xOffset,
+
+        y:
+            groundY()-
+            90-
+            Math.random()*115,
+
+        r:
+            type==="coin"
+            ? 9
+            : 14,
+
+        rotation:0
+
+    });
+
+}
+
+
+function buildPattern(){
+
+    const pattern =
+        patternForLevel(
+            selectedLevel
+        );
+
+    let offset=0;
+
+    for(
+        let i=0;
+        i<pattern.length;
+        i++
+    ){
+
+        const type =
+            pattern[i];
+
+        if(
+            type==="coin"
+        ){
+
+            spawnPickup(
+                "coin",
+                offset
+            );
+
+            offset+=70;
+
+        }
+
+        else{
+
+            spawnObstacle(
+                type,
+                offset
+            );
+
+            offset+=
+                115+
+                Math.random()*75;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   COLLISION
+   ========================================================= */
+
+function intersects(a,b){
+
+    return (
+
+        a.x <
+        b.x+b.w &&
+
+        a.x+a.w >
+        b.x &&
+
+        a.y <
+        b.y+b.h &&
+
+        a.y+a.h >
+        b.y
+
+    );
+
+}
+
+
+function obstacleBox(o){
+
+    if(
+        o.type==="gap"
+    ){
+
+        return {
+
+            x:o.x,
+
+            y:
+                groundY(),
+
+            w:o.w,
+
+            h:CH-groundY()
+
+        };
+
+    }
+
+    if(
+        o.type==="high"
+    ){
+
+        return {
+
+            x:o.x,
+
+            y:
+                groundY()-105,
+
+            w:o.w,
+
+            h:o.h
+
+        };
+
+    }
+
+    return {
+
+        x:o.x,
+
+        y:
+            groundY()-o.h,
+
+        w:o.w,
+
+        h:o.h
+
+    };
+
+}
+
+
+/* =========================================================
+   DAMAGE
+   ========================================================= */
+
+function takeDamage(){
+
+    if(
+        player.invincible>0 ||
+        player.dashTimer>0
+    ) return;
+
+    if(
+        player.shield>0
+    ){
+
+        player.shield=0;
+
+        player.invincible=60;
+
+        shake=12;
+
+        soundShield();
+
+        return;
+
+    }
+
+    lives--;
+
+    player.invincible=80;
+
+    shake=12;
+
+    soundHit();
+
+    floatingTexts.push({
+
+        text:"-1 LIFE",
+
+        x:player.x,
+
+        y:player.y,
+
+        life:60,
+
+        color:"#ff3b30"
+
+    });
+
+    updateHUD();
+
+    if(lives<=0){
+
+        endRun(
+            "You hit the wall."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   UPDATE WORLD
+   ========================================================= */
+
+function updateWorld(dt){
+
+    gameTime+=dt;
+
+    distance +=
+        speed*
+        dt*
+        .1;
+
+    score +=
+        speed*
+        dt*
+        .7;
+
+    levelProgress +=
+        speed*
+        dt;
+
+    save.missions.distance +=
+        speed*
+        dt*.1;
+
+    save.totalDistance =
+        save.missions.distance;
+
+    speed +=
+        .002*
+        dt;
+
+    spawnTimer -= dt;
+
+    if(
+        spawnTimer<=0
+    ){
+
+        buildPattern();
+
+        const difficulty =
+            getLevelData(
+                selectedLevel
+            ).difficulty;
+
+        spawnTimer =
+            Math.max(
+                42,
+                100-
+                difficulty*5-
+                speed*1.7
+            );
+
+    }
+
+
+    /* obstacles */
+
+    for(
+        let i=
+            obstacles.length-1;
+        i>=0;
+        i--
+    ){
+
+        const o =
+            obstacles[i];
+
+        o.x -=
+            speed*dt;
+
+        const box =
+            obstacleBox(o);
+
+        if(
+            intersects(
+                player.box(),
+                box
+            )
+        ){
+
+            takeDamage();
+
+        }
+
+        if(
+            !o.passed &&
+            o.x+
+            o.w<
+            player.x
+        ){
+
+            o.passed=true;
+
+            score+=
+                20;
+
+            xpEarned+=
+                2;
+
+        }
+
+        if(
+            o.x<
+            -200
+        ){
+
+            obstacles.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+
+    /* pickups */
+
+    for(
+        let i=
+            pickups.length-1;
+        i>=0;
+        i--
+    ){
+
+        const p =
+            pickups[i];
+
+        p.x -=
+            speed*dt;
+
+        p.rotation+=
+            dt*.1;
+
+        const dx =
+            p.x-
+            (
+                player.x+
+                player.w/2
+            );
+
+        const dy =
+            p.y-
+            (
+                player.y+
+                player.h/2
+            );
+
+        if(
+            Math.sqrt(
+                dx*dx+
+                dy*dy
+            )<
+            28
+        ){
+
+            collectPickup(p);
+
+            pickups.splice(
+                i,
+                1
+            );
+
+        }
+
+        if(
+            p.x<-100
+        ){
+
+            pickups.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+
+    updateParticles(dt);
+
+    updateFloatingTexts(dt);
+
+    if(
+        shake>0
+    ){
+
+        shake -=
+            dt;
+
+    }
+
+
+    /* LEVEL COMPLETE */
+
+    const target =
+        getLevelData(
+            selectedLevel
+        ).target;
+
+    if(
+        levelProgress>=target &&
+        !levelComplete
+    ){
+
+        completeLevel();
+
+    }
+
+
+    updateHUD();
+
+}
+
+
+/* =========================================================
+   PICKUPS
+   ========================================================= */
+
+function collectPickup(p){
+
+    if(
+        p.type==="coin"
+    ){
+
+        coins++;
+
+        score+=
+            100;
+
+        xpEarned+=
+            5;
+
+        save.coins++;
+
+        save.missions.coins++;
+
+        soundCoin();
+
+        floatingTexts.push({
+
+            text:"+100",
+
+            x:p.x,
+
+            y:p.y,
+
+            life:45,
+
+            color:"#ffd166"
+
+        });
+
+        for(
+            let i=0;
+            i<8;
+            i++
+        ){
+
+            particles.push({
+
+                x:p.x,
+
+                y:p.y,
+
+                vx:
+                    (Math.random()-.5)*5,
+
+                vy:
+                    (Math.random()-.5)*5,
+
+                life:25,
+
+                max:25,
+
+                size:3
+
+            });
+
+        }
+
+    }
+
+    if(
+        p.type==="shield"
+    ){
+
+        player.shield=1;
+
+        soundShield();
+
+    }
+
+}
+
+
+/* =========================================================
+   PARTICLES
+   ========================================================= */
+
+function spawnJumpParticles(){
+
+    for(
+        let i=0;
+        i<10;
+        i++
+    ){
+
+        particles.push({
+
+            x:
+                player.x+
+                player.w/2,
+
+            y:
+                groundY(),
+
+            vx:
+                (Math.random()-.5)*4,
+
+            vy:
+                -Math.random()*3,
+
+            life:25,
+
+            max:25,
+
+            size:
+                2+
+                Math.random()*3
+
+        });
+
+    }
+
+}
+
+
+function updateParticles(dt){
+
+    for(
+        let i=
+            particles.length-1;
+        i>=0;
+        i--
+    ){
+
+        const p=
+            particles[i];
+
+        p.x+=
+            p.vx*dt;
+
+        p.y+=
+            p.vy*dt;
+
+        p.vy+=
+            .15*dt;
+
+        p.life-=
+            dt;
+
+        if(
+            p.life<=0
+        ){
+
+            particles.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+}
+
+
+function drawParticles(){
+
+    for(
+        const p of particles
+    ){
+
+        ctx.globalAlpha=
+            Math.max(
+                0,
+                p.life/p.max
+            );
+
+        ctx.fillStyle=
+            "#ff3b30";
+
+        ctx.fillRect(
+            p.x,
+            p.y,
+            p.size,
+            p.size
+        );
+
+    }
+
+    ctx.globalAlpha=1;
+
+}
+
+
+/* =========================================================
+   FLOATING TEXT
+   ========================================================= */
+
+function updateFloatingTexts(dt){
+
+    for(
+        let i=
+            floatingTexts.length-1;
+        i>=0;
+        i--
+    ){
+
+        const f=
+            floatingTexts[i];
+
+        f.y -=
+            .6*dt;
+
+        f.life -=
+            dt;
+
+        if(
+            f.life<=0
+        ){
+
+            floatingTexts.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+}
+
+
+function drawFloatingTexts(){
+
+    ctx.textAlign="center";
+
+    for(
+        const f of floatingTexts
+    ){
+
+        ctx.globalAlpha=
+            f.life/60;
+
+        ctx.fillStyle=
+            f.color;
+
+        ctx.font=
+            "bold 14px Arial";
+
+        ctx.fillText(
+            f.text,
+            f.x,
+            f.y
+        );
+
+    }
+
+    ctx.globalAlpha=1;
+
+}
+
+
+/* =========================================================
+   DRAW BACKGROUND
+   ========================================================= */
+
+function drawBackground(){
+
+    const data =
+        getLevelData(
+            selectedLevel
+        );
+
+    const env =
+        data.environment;
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            CH
+        );
+
+    gradient.addColorStop(
+        0,
+        env.sky1
+    );
+
+    gradient.addColorStop(
+        1,
+        env.sky2
+    );
+
+    ctx.fillStyle=
+        gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        CW,
+        CH
+    );
+
+
+    /* stars */
+
+    if(
+        stars.length===0
+    ){
+
+        for(
+            let i=0;
+            i<90;
+            i++
+        ){
+
+            stars.push({
+
+                x:
+                    Math.random()*CW,
+
+                y:
+                    Math.random()*CH*.65,
+
+                r:
+                    Math.random()*1.5,
+
+                a:
+                    .2+
+                    Math.random()*.8
+
+            });
+
+        }
+
+    }
+
+
+    for(
+        const s of stars
+    ){
+
+        ctx.globalAlpha=
+            s.a;
+
+        ctx.fillStyle="#fff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            s.x,
+            s.y,
+            s.r,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+    ctx.globalAlpha=1;
+
+
+    /* moon */
+
+    ctx.fillStyle=
+        "rgba(255,255,255,.8)";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        CW*.82,
+        CH*.18,
+        34,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* city buildings */
+
+    const buildingCount=22;
+
+    for(
+        let i=0;
+        i<buildingCount;
+        i++
+    ){
+
+        const width =
+            55+
+            ((i*17)%65);
+
+        const height =
+            100+
+            ((i*73)%240);
+
+        const x =
+            i*105-
+            (
+                distance*
+                .35
+            )%
+            105;
+
+        ctx.fillStyle =
+            i%2
+            ? "rgba(5,5,12,.9)"
+            : "rgba(12,12,22,.9)";
+
+        ctx.fillRect(
+            x,
+            groundY()-height,
+            width,
+            height
+        );
+
+
+        for(
+            let wy=
+                groundY()-height+18;
+            wy<
+                groundY()-25;
+            wy+=24
+        ){
+
+            for(
+                let wx=
+                    x+10;
+                wx<
+                    x+width-8;
+                wx+=19
+            ){
+
+                const seed =
+                    (
+                        i*13+
+                        Math.floor(wy)+
+                        Math.floor(wx)
+                    )%11;
+
+                if(seed<3){
+
+                    ctx.fillStyle=
+                        env.accent;
+
+                    ctx.globalAlpha=
+                        .12+
+                        seed*.05;
+
+                    ctx.fillRect(
+                        wx,
+                        wy,
+                        6,
+                        7
+                    );
+
+                }
+
+            }
+
+        }
+
+        ctx.globalAlpha=1;
+
+    }
+
+
+    /* ground */
+
+    ctx.fillStyle=
+        env.ground;
+
+    ctx.fillRect(
+        0,
+        groundY(),
+        CW,
+        CH-groundY()
+    );
+
+
+    /* road line */
+
+    ctx.strokeStyle=
+        "rgba(255,255,255,.13)";
+
+    ctx.lineWidth=2;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        groundY()
+    );
+
+    ctx.lineTo(
+        CW,
+        groundY()
+    );
+
+    ctx.stroke();
+
+
+    /* moving road */
+
+    const roadOffset =
+        -(
+            distance*
+            8
+        )%100;
+
+    ctx.strokeStyle=
+        "rgba(255,255,255,.08)";
+
+    ctx.lineWidth=3;
+
+    for(
+        let x=roadOffset;
+        x<CW;
+        x+=100
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            groundY()+45
+        );
+
+        ctx.lineTo(
+            x+45,
+            groundY()+45
+        );
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW OBSTACLES
+   ========================================================= */
+
+function drawObstacles(){
+
+    const env =
+        getLevelData(
+            selectedLevel
+        ).environment;
+
+
+    for(
+        const o of obstacles
+    ){
+
+        const box =
+            obstacleBox(o);
+
+
+        if(
+            o.type==="block"
+        ){
+
+            ctx.fillStyle=
+                "#25252c";
+
+            ctx.fillRect(
+                box.x,
+                box.y,
+                box.w,
+                box.h
+            );
+
+            ctx.fillStyle=
+                env.accent;
+
+            ctx.fillRect(
+                box.x,
+                box.y,
+                box.w,
+                4
+            );
+
+        }
+
+
+        if(
+            o.type==="spike"
+        ){
+
+            ctx.fillStyle=
+                "#ff3b30";
+
+            const baseY=
+                groundY();
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                o.x,
+                baseY
+            );
+
+            ctx.lineTo(
+                o.x+
+                o.w/2,
+                baseY-o.h
+            );
+
+            ctx.lineTo(
+                o.x+
+                o.w,
+                baseY
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+
+        }
+
+
+        if(
+            o.type==="low"
+        ){
+
+            ctx.fillStyle=
+                "#ff9f43";
+
+            ctx.fillRect(
+                o.x,
+                groundY()-o.h,
+                o.w,
+                o.h
+            );
+
+            ctx.fillStyle="#111";
+
+            ctx.fillRect(
+                o.x+8,
+                groundY()-o.h+7,
+                o.w-16,
+                4
+            );
+
+        }
+
+
+        if(
+            o.type==="high"
+        ){
+
+            ctx.fillStyle=
+                "#b45cff";
+
+            ctx.fillRect(
+                o.x,
+                groundY()-105,
+                o.w,
+                o.h
+            );
+
+            ctx.fillStyle="#111";
+
+            ctx.fillRect(
+                o.x+7,
+                groundY()-98,
+                o.w-14,
+                4
+            );
+
+        }
+
+
+        if(
+            o.type==="wall"
+        ){
+
+            ctx.fillStyle=
+                "#15151c";
+
+            ctx.fillRect(
+                o.x,
+                groundY()-o.h,
+                o.w,
+                o.h
+            );
+
+            ctx.fillStyle=
+                env.accent;
+
+            ctx.fillRect(
+                o.x,
+                groundY()-o.h,
+                4,
+                o.h
+            );
+
+        }
+
+
+        if(
+            o.type==="gap"
+        ){
+
+            ctx.fillStyle=
+                "#000";
+
+            ctx.fillRect(
+                o.x,
+                groundY(),
+                o.w,
+                CH-groundY()
+            );
+
+            ctx.strokeStyle=
+                "#ff3b30";
+
+            ctx.lineWidth=2;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                o.x,
+                groundY()
+            );
+
+            ctx.lineTo(
+                o.x+o.w,
+                groundY()
+            );
+
+            ctx.stroke();
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW PICKUPS
+   ========================================================= */
+
+function drawPickups(){
+
+    for(
+        const p of pickups
+    ){
+
+        if(
+            p.type==="coin"
+        ){
+
+            ctx.save();
+
+            ctx.translate(
+                p.x,
+                p.y
+            );
+
+            ctx.scale(
+                Math.cos(
+                    p.rotation
+                ),
+                1
+            );
+
+            ctx.fillStyle=
+                "#ffd166";
+
+            ctx.shadowBlur=15;
+
+            ctx.shadowColor=
+                "#ffd166";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                0,
+                0,
+                p.r,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fill();
+
+            ctx.shadowBlur=0;
+
+            ctx.fillStyle=
+                "#8a5d00";
+
+            ctx.font=
+                "bold 11px Arial";
+
+            ctx.textAlign="center";
+
+            ctx.textBaseline="middle";
+
+            ctx.fillText(
+                "$",
+                0,
+                1
+            );
+
+            ctx.restore();
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   GAME LOOP
+   ========================================================= */
+
+function gameLoop(now){
+
+    const dt =
+        Math.min(
+            2,
+            (now-lastTime)/16.666
+        );
+
+    lastTime=now;
+
+
+    ctx.save();
+
+    if(
+        shake>0
+    ){
+
+        ctx.translate(
+            (Math.random()-.5)*shake,
+            (Math.random()-.5)*shake
+        );
+
+    }
+
+
+    drawBackground();
+
+    if(
+        running &&
+        !paused
+    ){
+
+        player.update(dt);
+
+        updateWorld(dt);
+
+    }
+
+    drawObstacles();
+
+    drawPickups();
+
+    drawParticles();
+
+    player.draw();
+
+    drawFloatingTexts();
+
+    ctx.restore();
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+requestAnimationFrame(
+    gameLoop
+);
+
+
+/* =========================================================
+   START LEVEL
+   ========================================================= */
+
+function startLevel(level){
+
+    selectedLevel =
+        Math.max(
+            1,
+            Math.min(
+                TOTAL_LEVELS,
+                level
+            )
+        );
+
+    const data =
+        getLevelData(
+            selectedLevel
+        );
+
+    score=0;
+
+    coins=0;
+
+    xpEarned=0;
+
+    distance=0;
+
+    lives=3;
+
+    speed=data.speed;
+
+    levelSpeed=data.speed;
+
+    levelProgress=0;
+
+    gameTime=0;
+
+    spawnTimer=15;
+
+    currentPatternIndex=0;
+
+    obstacles=[];
+
+    pickups=[];
+
+    particles=[];
+
+    floatingTexts=[];
+
+    player.reset();
+
+    running=true;
+
+    paused=false;
+
+    levelComplete=false;
+
+    showGame();
+
+    updateHUD();
+
+    startMusicForLevel();
+
+}
+
+
+/* =========================================================
+   COMPLETE LEVEL
+   ========================================================= */
+
+function completeLevel(){
+
+    levelComplete=true;
+
+    running=false;
+
+    const level=
+        selectedLevel;
+
+    if(
+        !save.completed.includes(
+            level
+        )
+    ){
+
+        save.completed.push(
+            level
+        );
+
+        save.missions.levels++;
+
+        save.xp +=
+            100+
+            level*10;
+
+        xpEarned +=
+            100+
+            level*10;
+
+        if(
+            level+1<=TOTAL_LEVELS
+        ){
+
+            save.unlocked =
+                Math.max(
+                    save.unlocked,
+                    level+1
+                );
+
+        }
+
+        if(
+            level===10
+        ){
+
+            save.skins.push(
+                "red"
+            );
+
+        }
+
+        if(
+            level===25
+        ){
+
+            save.skins.push(
+                "gold"
+            );
+
+        }
+
+        if(
+            level===50
+        ){
+
+            save.skins.push(
+                "neon"
+            );
+
+        }
+
+    }
+
+    save.coins += coins;
+
+    save.xp +=
+        xpEarned;
+
+    save.bestScore =
+        Math.max(
+            save.bestScore,
+            Math.floor(score)
+        );
+
+    saveGame();
+
+    showGameOver(
+        "LEVEL COMPLETE! 🔥"
+    );
+
+}
+
+
+/* =========================================================
+   END RUN
+   ========================================================= */
+
+function endRun(message){
+
+    running=false;
+
+    save.coins += coins;
+
+    save.xp +=
+        Math.floor(
+            xpEarned
+        );
+
+    save.bestScore =
+        Math.max(
+            save.bestScore,
+            Math.floor(score)
+        );
+
+    saveGame();
+
+    showGameOver(
+        message
+    );
+
+}
+
+
+/* =========================================================
+   UI NAVIGATION
+   ========================================================= */
+
+function hideAllScreens(){
+
+    const ids=[
+
+        "startScreen",
+        "homeScreen",
+        "levelsScreen",
+        "missionsScreen",
+        "musicScreen",
+        "profileScreen",
+        "gameOverScreen"
+
+    ];
+
+    ids.forEach(
+        id=>{
+            document
+                .getElementById(id)
+                .classList.add(
+                    "hidden"
+                );
+        }
+    );
+
+}
+
+
+function createProfile(){
+
+    const name =
+        document
+            .getElementById(
+                "nameInput"
+            )
+            .value
+            .trim();
+
+    const email =
+        document
+            .getElementById(
+                "emailInput"
+            )
+            .value
+            .trim();
+
+    if(!name){
+
+        alert(
+            "Enter your runner name."
+        );
+
+        return;
+
+    }
+
+    if(
+        !email ||
+        !email.includes("@")
+    ){
+
+        alert(
+            "Enter a valid email."
+        );
+
+        return;
+
+    }
+
+    save.name=name;
+
+    save.email=email;
+
+    saveGame();
+
+    showHome();
+
+}
+
+
+function showHome(){
+
+    running=false;
+
+    hideAllScreens();
+
+    document
+        .getElementById(
+            "homeScreen"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+    document
+        .getElementById(
+            "hud"
+        )
+        .style.display="none";
+
+    document
+        .getElementById(
+            "controls"
+        )
+        .style.display="none";
+
+    document
+        .getElementById(
+            "pauseButton"
+        )
+        .style.display="none";
+
+    updateHome();
+
+}
+
+
+function updateHome(){
+
+    document
+        .getElementById(
+            "playerPill"
+        )
+        .textContent=
+        save.name ||
+        "RUNNER";
+
+    document
+        .getElementById(
+            "homeLevel"
+        )
+        .textContent=
+        String(
+            save.unlocked
+        ).padStart(2,"0");
+
+    const data =
+        getLevelData(
+            save.unlocked
+        );
+
+    document
+        .getElementById(
+            "homeLevelText"
+        )
+        .textContent=
+        data.environment.name+
+        " • DIFFICULTY "+
+        data.difficulty+
+        "/10";
+
+}
+
+
+function showLevels(){
+
+    hideAllScreens();
+
+    document
+        .getElementById(
+            "levelsScreen"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+    renderLevelGrid();
+
+}
+
+
+function renderLevelGrid(){
+
+    const grid =
+        document.getElementById(
+            "levelGrid"
+        );
+
+    grid.innerHTML="";
+
+    for(
+        let i=1;
+        i<=TOTAL_LEVELS;
+        i++
+    ){
+
+        const btn =
+            document.createElement(
+                "button"
+            );
+
+        btn.className=
+            "level-button";
+
+        const unlocked =
+            i<=save.unlocked;
+
+        const completed =
+            save.completed.includes(
+                i
+            );
+
+        if(
+            unlocked
+        ){
+
+            btn.classList.add(
+                "unlocked"
+            );
+
+        }else{
+
+            btn.classList.add(
+                "locked"
+            );
+
+        }
+
+        if(
+            completed
+        ){
+
+            btn.classList.add(
+                "completed"
+            );
+
+        }
+
+        if(
+            i===selectedLevel
+        ){
+
+            btn.classList.add(
+                "current"
+            );
+
+        }
+
+        btn.textContent=
+            unlocked
+            ? i
+            : "🔒";
+
+        if(unlocked){
+
+            btn.onclick=()=>{
+
+                selectedLevel=i;
+
+                launchSelectedLevel();
+
+            };
+
+        }
+
+        grid.appendChild(
+            btn
+        );
+
+    }
+
+}
+
+
+function launchSelectedLevel(){
+
+    startLevel(
+        selectedLevel ||
+        save.unlocked
+    );
+
+}
+
+
+function showMissions(){
+
+    hideAllScreens();
+
+    document
+        .getElementById(
+            "missionsScreen"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+    updateMissions();
+
+}
+
+
+function updateMissions(){
+
+    document
+        .getElementById(
+            "missionDistance"
+        )
+        .style.width=
+        Math.min(
+            100,
+            save.missions.distance/10
+        )+
+        "%";
+
+    document
+        .getElementById(
+            "missionCoins"
+        )
+        .style.width=
+        Math.min(
+            100,
+            save.missions.coins
+        )+
+        "%";
+
+    document
+        .getElementById(
+            "missionLevels"
+        )
+        .style.width=
+        Math.min(
+            100,
+            save.missions.levels*10
+        )+
+        "%";
+
+}
+
+
+function showMusic(){
+
+    hideAllScreens();
+
+    document
+        .getElementById(
+            "musicScreen"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+}
+
+
+function showProfile(){
+
+    hideAllScreens();
+
+    document
+        .getElementById(
+            "profileScreen"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+    document
+        .getElementById(
+            "profileName"
+        )
+        .textContent=
+        save.name ||
+        "RUNNER";
+
+    document
+        .getElementById(
+            "profileEmail"
+        )
+        .textContent=
+        save.email ||
+        "";
+
+    document
+        .getElementById(
+            "profileLevel"
+        )
+        .textContent=
+        save.unlocked;
+
+    document
+        .getElementById(
+            "profileCoins"
+        )
+        .textContent=
+        save.coins;
+
+    document
+        .getElementById(
+            "profileXP"
+        )
+        .textContent=
+        save.xp;
+
+}
+
+
+function showGame(){
+
+    hideAllScreens();
+
+    document
+        .getElementById(
+            "hud"
+        )
+        .style.display="flex";
+
+    document
+        .getElementById(
+            "controls"
+        )
+        .style.display="flex";
+
+    document
+        .getElementById(
+            "pauseButton"
+        )
+        .style.display="block";
+
+}
+
+
+function showGameOver(message){
+
+    document
+        .getElementById(
+            "hud"
+        )
+        .style.display="none";
+
+    document
+        .getElementById(
+            "controls"
+        )
+        .style.display="none";
+
+    document
+        .getElementById(
+            "pauseButton"
+        )
+        .style.display="none";
+
+    hideAllScreens();
+
+    document
+        .getElementById(
+            "gameOverScreen"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+    document
+        .getElementById(
+            "gameOverMessage"
+        )
+        .textContent=
+        message;
+
+    document
+        .getElementById(
+            "finalScore"
+        )
+        .textContent=
+        Math.floor(score);
+
+    document
+        .getElementById(
+            "finalCoins"
+        )
+        .textContent=
+        coins;
+
+    document
+        .getElementById(
+            "finalDistance"
+        )
+        .textContent=
+        Math.floor(
+            distance
+        )+"m";
+
+    document
+        .getElementById(
+            "finalXP"
+        )
+        .textContent=
+        xpEarned;
+
+}
+
+
+function retryLevel(){
+
+    startLevel(
+        selectedLevel
+    );
+
+}
+
+
+/* =========================================================
+   HUD
+   ========================================================= */
+
+function updateHUD(){
+
+    document
+        .getElementById(
+            "hudLevel"
+        )
+        .textContent=
+        String(
+            selectedLevel
+        ).padStart(2,"0");
+
+    document
+        .getElementById(
+            "hudScore"
+        )
+        .textContent=
+        Math.floor(score);
+
+    document
+        .getElementById(
+            "hudCoins"
+        )
+        .textContent=
+        coins;
+
+    document
+        .getElementById(
+            "hudLives"
+        )
+        .textContent=
+        "❤️".repeat(
+            Math.max(
+                0,
+                lives
+            )
+        );
+
+}
+
+
+/* =========================================================
+   PAUSE
+   ========================================================= */
+
+function togglePause(){
+
+    if(!running)return;
+
+    paused=!paused;
+
+    document
+        .getElementById(
+            "pauseButton"
+        )
+        .textContent=
+        paused
+        ? "▶"
+        : "Ⅱ";
+
+}
+
+
+/* =========================================================
+   CONTROLS
+   ========================================================= */
+
+function bindControl(
+    id,
+    callback
+){
+
+    const el =
+        document.getElementById(
+            id
+        );
+
+    el.addEventListener(
+        "touchstart",
+        e=>{
+
+            e.preventDefault();
+
+            callback();
+
+        },
+        {
+            passive:false
+        }
+    );
+
+    el.addEventListener(
+        "mousedown",
+        e=>{
+
+            e.preventDefault();
+
+            callback();
+
+        }
+    );
+
+}
+
+
+bindControl(
+    "jumpControl",
+    ()=>player.jump()
+);
+
+bindControl(
+    "doubleControl",
+    ()=>player.jump()
+);
+
+bindControl(
+    "slideControl",
+    ()=>player.slide()
+);
+
+bindControl(
+    "dashControl",
+    ()=>player.dash()
+);
+
+
+/* keyboard */
+
+document.addEventListener(
+    "keydown",
+    e=>{
+
+        if(
+            e.code==="Space" ||
+            e.code==="ArrowUp"
+        ){
+
+            e.preventDefault();
+
+            player.jump();
+
+        }
+
+        if(
+            e.code==="ArrowDown"
+        ){
+
+            e.preventDefault();
+
+            player.slide();
+
+        }
+
+        if(
+            e.code==="ShiftLeft" ||
+            e.code==="ShiftRight"
+        ){
+
+            player.dash();
+
+        }
+
+        if(
+            e.code==="Escape"
+        ){
+
+            togglePause();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   SWIPE
+   ========================================================= */
+
+let touchStartX=0;
+let touchStartY=0;
+
+document.addEventListener(
+    "touchstart",
+    e=>{
+
+        if(
+            !running
+        ) return;
+
+        const t=
+            e.changedTouches[0];
+
+        touchStartX=t.clientX;
+
+        touchStartY=t.clientY;
+
+    },
+    {
+        passive:true
+    }
+);
+
+
+document.addEventListener(
+    "touchend",
+    e=>{
+
+        if(
+            !running
+        ) return;
+
+        const t=
+            e.changedTouches[0];
+
+        const dx=
+            t.clientX-
+            touchStartX;
+
+        const dy=
+            t.clientY-
+            touchStartY;
+
+        if(
+            Math.abs(dy)>
+            Math.abs(dx)
+        ){
+
+            if(
+                dy<-
+                45
+            ){
+
+                player.jump();
+
+            }
+
+            else if(
+                dy>
+                45
+            ){
+
+                player.slide();
+
+            }
+
+        }else if(
+            dx>
+            60
+        ){
+
+            player.dash();
+
+        }
+
+    },
+    {
+        passive:true
+    }
+);
+
+
+/* =========================================================
+   AUDIO ENGINE
+   ========================================================= */
+
+let audioCtx=null;
+
+let masterGain=null;
+
+let musicGain=null;
+
+let currentMusic=null;
+
+let musicTimer=null;
+
+
+function initAudio(){
+
+    if(audioCtx)return;
+
+    audioCtx =
+        new (
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
+
+    masterGain =
+        audioCtx.createGain();
+
+    musicGain =
+        audioCtx.createGain();
+
+    masterGain.gain.value=.35;
+
+    musicGain.gain.value=.09;
+
+    musicGain.connect(
+        masterGain
+    );
+
+    masterGain.connect(
+        audioCtx.destination
+    );
+
+}
+
+
+function beep(
+    frequency,
+    duration,
+    type="square",
+    volume=.05
+){
+
+    initAudio();
+
+    if(
+        audioCtx.state===
+        "suspended"
+    ){
+
+        audioCtx.resume();
+
+    }
+
+    const osc =
+        audioCtx.createOscillator();
+
+    const gain =
+        audioCtx.createGain();
+
+    osc.type=type;
+
+    osc.frequency.value=
+        frequency;
+
+    gain.gain.value=0;
+
+    gain.gain.linearRampToValueAtTime(
+        volume,
+        audioCtx.currentTime+.01
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioCtx.currentTime+
+        duration
+    );
+
+    osc.connect(gain);
+
+    gain.connect(
+        masterGain
+    );
+
+    osc.start();
+
+    osc.stop(
+        audioCtx.currentTime+
+        duration+
+        .02
+    );
+
+}
+
+
+function soundJump(){
+
+    beep(
+        430,
+        .09,
+        "square",
+        .055
+    );
+
+}
+
+
+function soundLand(){
+
+    beep(
+        100,
+        .05,
+        "sine",
+        .035
+    );
+
+}
+
+
+function soundSlide(){
+
+    beep(
+        180,
+        .06,
+        "sawtooth",
+        .025
+    );
+
+}
+
+
+function soundDash(){
+
+    beep(
+        700,
+        .12,
+        "sawtooth",
+        .045
+    );
+
+}
+
+
+function soundCoin(){
+
+    beep(
+        900,
+        .06,
+        "sine",
+        .05
+    );
+
+    setTimeout(
+        ()=>{
+            beep(
+                1300,
+                .08,
+                "sine",
+                .04
+            );
+        },
+        45
+    );
+
+}
+
+
+function soundHit(){
+
+    beep(
+        70,
+        .18,
+        "sawtooth",
+        .08
+    );
+
+}
+
+
+function soundShield(){
+
+    beep(
+        500,
+        .12,
+        "triangle",
+        .05
+    );
+
+}
+
+
+/* =========================================================
+   PROCEDURAL MUSIC
+   ========================================================= */
+
+const tracks=[
+
+    {
+
+        name:"NIGHT RUN",
+
+        bpm:128,
+
+        notes:[
+            110,
+            130.81,
+            146.83,
+            164.81,
+            146.83,
+            130.81,
+            98,
+            110
+        ]
+
+    },
+
+    {
+
+        name:"NEON ESCAPE",
+
+        bpm:145,
+
+        notes:[
+            146.83,
+            174.61,
+            196,
+            220,
+            196,
+            174.61,
+            164.81,
+            196
+        ]
+
+    },
+
+    {
+
+        name:"LAST CITY",
+
+        bpm:155,
+
+        notes:[
+            82.41,
+            98,
+            110,
+            130.81,
+            146.83,
+            130.81,
+            110,
+            98
+        ]
+
+    }
+
+];
+
+
+function playTrack(index){
+
+    initAudio();
+
+    stopMusic();
+
+    const track=
+        tracks[index];
+
+    let step=0;
+
+    const interval =
+        60000/
+        track.bpm;
+
+    currentMusic=index;
+
+    musicTimer =
+        setInterval(
+            ()=>{
+
+                const freq=
+                    track.notes[
+                        step%
+                        track.notes.length
+                    ];
+
+                const osc=
+                    audioCtx
+                    .createOscillator();
+
+                const gain=
+                    audioCtx
+                    .createGain();
+
+                osc.type=
+                    step%4===0
+                    ? "sawtooth"
+                    : "triangle";
+
+                osc.frequency.value=
+                    freq;
+
+                gain.gain.value=0;
+
+                gain.gain.linearRampToValueAtTime(
+                    .18,
+                    audioCtx.currentTime+.01
+                );
+
+                gain.gain.exponentialRampToValueAtTime(
+                    .001,
+                    audioCtx.currentTime+
+                    (interval/1000)*.85
+                );
+
+                osc.connect(gain);
+
+                gain.connect(
+                    musicGain
+                );
+
+                osc.start();
+
+                osc.stop(
+                    audioCtx.currentTime+
+                    (interval/1000)
+                );
+
+                step++;
+
+            },
+            interval
+        );
+
+    document
+        .getElementById(
+            "musicStatus"
+        )
+        .textContent=
+        "Playing: "+
+        track.name;
+
+}
+
+
+function startMusicForLevel(){
+
+    const index=
+        Math.floor(
+            (selectedLevel-1)/34
+        )%3;
+
+    playTrack(index);
+
+}
+
+
+function stopMusic(){
+
+    if(
+        musicTimer
+    ){
+
+        clearInterval(
+            musicTimer
+        );
+
+        musicTimer=null;
+
+    }
+
+    currentMusic=null;
+
+    const status=
+        document.getElementById(
+            "musicStatus"
+        );
+
+    if(status){
+
+        status.textContent=
+            "Music stopped.";
+
+    }
+
+}
+
+
+/* =========================================================
+   DOWNLOAD GENERATED TRACK
+   =========================================================
+
+   Creates a small WAV file procedurally.
+   This is original synthesized audio, not a copyrighted song.
+   ========================================================= */
+
+function downloadGeneratedTrack(){
+
+    const sampleRate=22050;
+
+    const seconds=8;
+
+    const samples=
+        sampleRate*
+        seconds;
+
+    const buffer=
+        new ArrayBuffer(
+            44+
+            samples*2
+        );
+
+    const view=
+        new DataView(
+            buffer
+        );
+
+
+    function writeString(
+        offset,
+        string
+    ){
+
+        for(
+            let i=0;
+            i<string.length;
+            i++
+        ){
+
+            view.setUint8(
+                offset+i,
+                string.charCodeAt(i)
+            );
+
+        }
+
+    }
+
+
+    writeString(
+        0,
+        "RIFF"
+    );
+
+    view.setUint32(
+        4,
+        36+
+        samples*2,
+        true
+    );
+
+    writeString(
+        8,
+        "WAVE"
+    );
+
+    writeString(
+        12,
+        "fmt "
+    );
+
+    view.setUint32(
+        16,
+        16,
+        true
+    );
+
+    view.setUint16(
+        20,
+        1,
+        true
+    );
+
+    view.setUint16(
+        22,
+        1,
+        true
+    );
+
+    view.setUint32(
+        24,
+        sampleRate,
+        true
+    );
+
+    view.setUint32(
+        28,
+        sampleRate*2,
+        true
+    );
+
+    view.setUint16(
+        32,
+        2,
+        true
+    );
+
+    view.setUint16(
+        34,
+        16,
+        true
+    );
+
+    writeString(
+        36,
+        "data"
+    );
+
+    view.setUint32(
+        40,
+        samples*2,
+        true
+    );
+
+
+    const notes=
+        tracks[0].notes;
+
+    const bpm=
+        tracks[0].bpm;
+
+    const beat=
+        60/bpm;
+
+    for(
+        let i=0;
+        i<samples;
+        i++
+    ){
+
+        const t=
+            i/sampleRate;
+
+        const note=
+            notes[
+                Math.floor(
+                    t/beat
+                )%
+                notes.length
+            ];
+
+        const phase=
+            2*
+            Math.PI*
+            note*
+            t;
+
+        const bass=
+            Math.sin(
+                phase
+            )*.25;
+
+        const kick=
+            Math.sin(
+                2*
+                Math.PI*
+                70*
+                t
+            )*
+            Math.exp(
+                -(t%beat)*20
+            )*
+            .25;
+
+        const value=
+            Math.max(
+                -1,
+                Math.min(
+                    1,
+                    bass+
+                    kick
+                )
+            );
+
+        view.setInt16(
+            44+
+            i*2,
+            value*
+            32767,
+            true
+        );
+
+    }
+
+
+    const blob=
+        new Blob(
+            [view],
+            {
+                type:"audio/wav"
+            }
+        );
+
+    const url=
+        URL.createObjectURL(
+            blob
+        );
+
+    const a=
+        document.createElement(
+            "a"
+        );
+
+    a.href=url;
+
+    a.download=
+        "run-break-night-run.wav";
+
+    a.click();
+
+    setTimeout(
+        ()=>{
+            URL.revokeObjectURL(
+                url
+            );
+        },
+        1000
+    );
+
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+function resetProgress(){
+
+    if(
+        !confirm(
+            "Delete your local RUN//BREAK progress?"
+        )
+    ){
+
+        return;
+
+    }
+
+    localStorage.removeItem(
+        "runbreak_save"
+    );
+
+    save=
+        structuredClone(
+            defaultSave
+        );
+
+    location.reload();
+
+}
+
+
+/* =========================================================
+   INITIAL UI
+   ========================================================= */
+
+function init(){
+
+    document
+        .getElementById(
+            "startLevel"
+        )
+        .textContent=
+        save.unlocked;
+
+    document
+        .getElementById(
+            "startCoins"
+        )
+        .textContent=
+        save.coins;
+
+    document
+        .getElementById(
+            "startBest"
+        )
+        .textContent=
+        save.bestScore;
+
+    if(
+        save.name
+    ){
+
+        document
+            .getElementById(
+                "nameInput"
+            )
+            .value=
+            save.name;
+
+    }
+
+    if(
+        save.email
+    ){
+
+        document
+            .getElementById(
+                "emailInput"
+            )
+            .value=
+            save.email;
+
+    }
+
+}
+
+
+init();
+
+
+/* =========================================================
+   PWA SERVICE WORKER
+   =========================================================
+
+   A service worker cannot be registered directly from
+   an inline script in a standalone HTML file.
+   A separate sw.js is provided below.
+   ========================================================= */
+
+if(
+    "serviceWorker"
+    in navigator
+){
+
+    window.addEventListener(
+        "load",
+        ()=>{
+            navigator
+                .serviceWorker
+                .register(
+                    "./sw.js"
+                )
+                .catch(
+                    ()=>{}
+                );
+        }
+    );
+
+}
+
+</script>
+
+</body>
+</html>
